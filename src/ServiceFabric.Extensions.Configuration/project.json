@@ -1,0 +1,18 @@
+﻿{
+    "version": "1.0.0-*",
+    "description": "ServiceFabric.Extensions.Configuration use Service Fabric configuration packages as sourace for ASP.NET Core configuration system",
+    "authors": [ "Tomas Dolezal" ],
+    "tags": [ "service fabric", "asp.net", "core" ],
+    "projectUrl": "http://github.com/dolly22/servicefabric-configuration",
+    "licenseUrl": "http://github.com/dolly22/servicefabric-configuration/blob/master/LICENSE.md",
+
+    "dependencies": {
+        "Microsoft.Extensions.Configuration": "1.0.0-rc1-final",
+        "Microsoft.Extensions.Configuration.Binder": "1.0.0-rc1-final",
+        "Microsoft.ServiceFabric": "5.0.135",
+        "System.Runtime.InteropServices": "4.0.21-beta-23516"
+    },
+    "frameworks": {
+        "net451": { }
+    }
+}
