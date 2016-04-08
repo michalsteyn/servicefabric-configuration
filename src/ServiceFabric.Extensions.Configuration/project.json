@@ -1,6 +1,6 @@
 ﻿{
     "version": "1.0.0-*",
-    "description": "ServiceFabric.Extensions.Configuration use Service Fabric configuration packages as sourace for ASP.NET Core configuration system",
+    "description": "ServiceFabric.Extensions.Configuration use Service Fabric configuration packages as source for ASP.NET Core configuration system",
     "authors": [ "Tomas Dolezal" ],
     "tags": [ "service fabric", "asp.net", "core" ],
     "projectUrl": "http://github.com/dolly22/servicefabric-configuration",
