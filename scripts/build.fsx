@@ -5,11 +5,9 @@
 
 open Fake
 open Fake.Git
-open Fake.ReleaseNotesHelper
 open Fake.Dnx
 open Fake.SemVerHelper
 
-let releaseNotes = LoadReleaseNotes "release_notes.md"
 let mutable version : SemVerHelper.SemVerInfo option = None
 
 Target "Clean" (fun _ ->
@@ -18,18 +16,28 @@ Target "Clean" (fun _ ->
 )
 
 Target "UpdateVersion" (fun _ ->   
-    tracefn "Release notes version: %s" releaseNotes.NugetVersion
-
     // compute commit count
     let repositoryDir = currentDirectory
     let currentSha = getCurrentSHA1 repositoryDir
-    let comitCount = runSimpleGitCommand repositoryDir "rev-list --count HEAD"
+
+    // get current version prefix from semver file
+    let versionPrefix = System.IO.File.ReadLines "semver" |> Seq.tryHead
+    if versionPrefix.IsNone then
+        failwith "Unable to read semver prefix"
+
+    // parse semver prefix
+    tracefn "Semver file prefix is %s" versionPrefix.Value
+    let semver = parse versionPrefix.Value    
+
+    let semverCreatedSha = runSimpleGitCommand repositoryDir <| sprintf "log -G\"%s\" --reverse --max-count=1 --format=format:%%H -- semver" versionPrefix.Value
+    let comitSinceCreated = runSimpleGitCommand repositoryDir <| sprintf "rev-list --no-merges --count %s..%s" semverCreatedSha currentSha
 
     let prereleaseInfo = 
-        match releaseNotes.SemVer.PreRelease with
+        match semver.PreRelease with
         | Some ver ->     
-            let buildCounterFixed = comitCount.PadLeft(3, '0')             
+            let buildCounterFixed = comitSinceCreated.PadLeft(3, '0')             
             let versionWithBuild = sprintf "%s-%s" ver.Origin buildCounterFixed           
+            tracefn "Prerelease version: %A" versionWithBuild
             Some {
                 PreRelease.Origin = versionWithBuild
                 Name = versionWithBuild
@@ -37,9 +45,7 @@ Target "UpdateVersion" (fun _ ->
             }
         | _ -> None
 
-
-    version <- Some { releaseNotes.SemVer with PreRelease = prereleaseInfo }
-    tracefn "Using prerelease: %A" version.Value.PreRelease
+    version <- Some { semver with PreRelease = prereleaseInfo }    
 )
 
 Target "UpgradeDnx" (fun _ ->
