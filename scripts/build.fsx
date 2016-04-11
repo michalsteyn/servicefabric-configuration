@@ -18,7 +18,6 @@ Target "Clean" (fun _ ->
 Target "UpdateVersion" (fun _ ->   
     // compute commit count
     let repositoryDir = currentDirectory
-    let currentSha = getCurrentSHA1 repositoryDir
 
     // get current version prefix from semver file
     let versionPrefix = System.IO.File.ReadLines "semver" |> Seq.tryHead
@@ -30,7 +29,7 @@ Target "UpdateVersion" (fun _ ->
     let semver = parse versionPrefix.Value    
 
     let semverCreatedSha = runSimpleGitCommand repositoryDir <| sprintf "log -G\"%s\" --reverse --max-count=1 --format=format:%%H -- semver" versionPrefix.Value
-    let comitSinceCreated = runSimpleGitCommand repositoryDir <| sprintf "rev-list --no-merges --count %s..%s" semverCreatedSha currentSha
+    let comitSinceCreated = runSimpleGitCommand repositoryDir <| sprintf "rev-list --no-merges --count %s..HEAD" semverCreatedSha
 
     let prereleaseInfo = 
         match semver.PreRelease with
