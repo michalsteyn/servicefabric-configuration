@@ -3,84 +3,71 @@
 #I "packages/FAKE.Dotnet/tools/"
 #r "Fake.Dotnet.dll"
 
+#load "paket-files\dolly22\FAKE.Gitsemver\Gitsemver.fsx"
+
 open Fake
 open Fake.Git
-open Fake.Dnx
 open Fake.SemVerHelper
+open Fake.Dotnet
+open Gitsemver
 
 let mutable version : SemVerHelper.SemVerInfo option = None
+let mutable currentGitSha : string = ""
 
 Target "Clean" (fun _ ->
     !! "artifacts" ++ "src/*/bin" ++ "test/*/bin"
         |> DeleteDirs
 )
 
-Target "UpdateVersion" (fun _ ->   
-    // compute commit count
-    let repositoryDir = currentDirectory
+Target "DetermineVersion" (fun _ ->   
+    let semver = 
+        getSemverInfoDefault 
+        |> appendPreReleaseBuildNumber 3
 
-    // get current version prefix from semver file
-    let versionPrefix = System.IO.File.ReadLines "semver" |> Seq.tryHead
-    if versionPrefix.IsNone then
-        failwith "Unable to read semver prefix"
+    version <- Some semver        
+    currentGitSha <- getCurrentSHA1 currentDirectory
 
-    // parse semver prefix
-    tracefn "Semver file prefix is %s" versionPrefix.Value
-    let semver = parse versionPrefix.Value    
+    let fileVersion = sprintf "%d.%d.%d" semver.Major semver.Minor semver.Patch
+    let assemblyVersion = sprintf "%d.0.0" semver.Major
 
-    let semverCreatedSha = runSimpleGitCommand repositoryDir <| sprintf "log -G\"%s\" --reverse --max-count=1 --format=format:%%H -- semver" versionPrefix.Value
-    let comitSinceCreated = runSimpleGitCommand repositoryDir <| sprintf "rev-list --no-merges --count %s..HEAD" semverCreatedSha
-
-    let prereleaseInfo = 
-        match semver.PreRelease with
-        | Some ver ->     
-            let buildCounterFixed = comitSinceCreated.PadLeft(3, '0')             
-            let versionWithBuild = sprintf "%s-%s" ver.Origin buildCounterFixed           
-            tracefn "Prerelease version: %A" versionWithBuild
-            Some {
-                PreRelease.Origin = versionWithBuild
-                Name = versionWithBuild
-                Number = None
-            }
-        | _ -> None
-
-    version <- Some { semver with PreRelease = prereleaseInfo }    
+    tracefn "Using version: %A" version.Value
 )
 
-Target "UpgradeDnx" (fun _ ->
-    DnvmUpgrade id    
-)
-
-Target "BuildProjects" (fun _ ->
+Target "PrepareDotnetCli" (fun _ ->
     let sdkVersion = GlobalJsonSdk "global.json"
     tracefn "Using global.json sdk version: %s" sdkVersion
 
-    //set sdk version from global.json
-    let setRuntimeOptions options = 
+    // set custom install directory
+    let customInstallDirectory = environVar "LocalAppData" @@ "Microsoft" @@ "dotnetbld" @@ sdkVersion
+
+    let setOptions (options: DotNetCliInstallOptions) = 
         { options with 
-            VersionOrAlias = sdkVersion 
-        }
+            Version = Version sdkVersion
+            Channel = Beta
+            CustomInstallDir = Some customInstallDirectory
+        }    
 
-    // set version suffix for project.json version template (1.0.0-*)
-    if version.IsSome && version.Value.PreRelease.IsSome then       
-        let prerelease = version.Value.PreRelease.Value.Origin
-        tracefn "Prerelese part: %s" prerelease
-        SetDnxVersionSuffix prerelease
+    DefaultDotnetCliDir <- customInstallDirectory
+    DotnetCliInstall setOptions
+)
 
+Target "RestorePackage" (fun _ ->
+    DotnetRestore id (currentDirectory @@ "src")
+)
+
+Target "BuildProjects" (fun _ ->
     !! "src/*/project.json" 
-        |> Seq.iter(fun proj ->  
+        |> Seq.iter(fun proj -> 
+            let versionSuffix = 
+                match version with
+                | Some x -> Some x.PreRelease.Value.Name
+                | None -> None
 
-            // restore packages
-            DnuRestore (fun o -> 
-                { o with 
-                    Runtime = o.Runtime |> setRuntimeOptions
-                }) proj
-
-            // build (pack) project and generate outputs
-            DnuPack (fun o -> 
-                { o with 
-                    Runtime = o.Runtime |> setRuntimeOptions
-                    Configuration = Release
+            // build project and produce outputs
+            DotnetPack (fun c -> 
+                { c with 
+                    Configuration = Release;
+                    VersionSuffix = versionSuffix;
                     OutputPath = Some (currentDirectory @@ "artifacts")
                 }) proj
         )
@@ -89,9 +76,10 @@ Target "BuildProjects" (fun _ ->
 Target "Default" <| DoNothing
 
 "Clean"
-    ==> "UpgradeDnx"
-    ==> "UpdateVersion"
-    ==> "BuildProjects"
+    ==> "DetermineVersion"
+    ==> "PrepareDotnetCli"
+    ==> "RestorePackage"
+    ==> "BuildProjects"    
     ==> "Default"
 
 // start build
