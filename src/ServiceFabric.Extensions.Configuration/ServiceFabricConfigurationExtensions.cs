@@ -12,7 +12,7 @@ namespace Microsoft.Extensions.Configuration
     {
         public static IConfigurationBuilder AddFabricConfiguration(this IConfigurationBuilder configurationBuilder, ConfigurationSettings fabricConfig)
         {
-            configurationBuilder.Add(new ServiceFabricConfigurationProvider(fabricConfig));
+            configurationBuilder.Add(new ServiceFabricConfigurationSource(fabricConfig));
             return configurationBuilder;
         }
 

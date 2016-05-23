@@ -27,7 +27,7 @@ namespace ServiceFabric.Extensions.Configuration
 
             foreach (var section in fabricConfig.Sections)
             {
-                var sectionPrefix = section.Name + Constants.KeyDelimiter;
+                var sectionPrefix = section.Name + ConfigurationPath.KeyDelimiter;
 
                 foreach (var parameter in section.Parameters)
                 {
