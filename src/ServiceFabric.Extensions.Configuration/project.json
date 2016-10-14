@@ -11,7 +11,7 @@
   "dependencies": {
     "Microsoft.Extensions.Configuration": "1.0.0",
     "Microsoft.Extensions.Configuration.Binder": "1.0.0",
-    "Microsoft.ServiceFabric": "5.1.150"
+    "Microsoft.ServiceFabric": "5.3.301"
   },
   "frameworks": {
     "net451": {}
