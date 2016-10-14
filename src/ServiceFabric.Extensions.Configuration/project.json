@@ -1,5 +1,5 @@
 ﻿{
-  "version": "1.0.0-*",
+  "version": "1.0.1-*",
   "description": "ServiceFabric.Extensions.Configuration use Service Fabric configuration packages as source for ASP.NET Core configuration system",
   "authors": [ "Tomas Dolezal" ],
   "packOptions": {
