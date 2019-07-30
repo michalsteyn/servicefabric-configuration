@@ -1,11 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25123.0
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29025.244
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "ServiceFabric.Extensions.Configuration", "src\ServiceFabric.Extensions.Configuration\ServiceFabric.Extensions.Configuration.xproj", "{0B478DD7-1140-48C9-999B-23C6BD36A4E1}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{37D7F77E-3C33-4254-A548-2778EC8E7F36}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceFabric.Extensions.Configuration", "src\ServiceFabric.Extensions.Configuration\ServiceFabric.Extensions.Configuration.csproj", "{0B478DD7-1140-48C9-999B-23C6BD36A4E1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,5 +23,8 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{0B478DD7-1140-48C9-999B-23C6BD36A4E1} = {37D7F77E-3C33-4254-A548-2778EC8E7F36}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1D08B4C1-3A69-4EB3-AEF8-AE123B0428E6}
 	EndGlobalSection
 EndGlobal
